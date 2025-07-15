@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cgsmhbm.MainController">
+    <!-- Menu no topo -->
+    <top>
+        <VBox>
+            <MenuBar>
+                <Menu mnemonicParsing="false" text="Como acionar garantia">
+               <items>
+                <MenuItem mnemonicParsing="false" text="Positivo" />
+                  <MenuItem mnemonicParsing="false" text="HP/AOC" />
+                  <MenuItem mnemonicParsing="false" text="LENOVO" />
+                  <MenuItem mnemonicParsing="false" text="MULTI" />
+               </items></Menu>
+                <Menu text="Carregar Arquivo">
+                	<MenuItem onAction="#onCarregarArquivo" text="Escolher Arquivo" />
+                </Menu>
+                <Menu text="Relatórios" />
+                <Menu text="Sobre">
+                	<MenuItem onAction="#onSobre" text="Sobre o sistema" /> 
+                </Menu>
+            </MenuBar>
+            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10;">
+                <Label text="Buscar:" />
+                <TextField id="campoBusca" fx:id="campoBusca" />
+            </HBox>
+        </VBox>
+    </top>
+    
+    <!-- Tabela central -->
+    <center>
+        <TableView id="tabelaEquipamentos" fx:id="tabelaEquipamentos" prefHeight="400.0" prefWidth="1220.0">
+            <columns>
+            	<TableColumn fx:id="colGLPI" prefWidth="76.0" text="GLPI" />
+                <TableColumn fx:id="colPatrimonio" prefWidth="105.0" text="Patrimônio" />
+       			<TableColumn fx:id="colNumeroSerie" prefWidth="173.0" text="Nº de Série" />
+      			<TableColumn fx:id="colDefeito" prefWidth="346.0" text="Defeito" />
+        		<TableColumn fx:id="colBatalhao" minWidth="9.0" prefWidth="120.0" text="Batalhão" />
+          		<TableColumn fx:id="colChamadoEmpresa" minWidth="0.0" prefWidth="148.0" text="Cod. Chamado Empresa" />
+        		<TableColumn fx:id="colStatus" prefWidth="245.0" text="Status" />
+            </columns>
+        </TableView>
+    </center>
+    
+    <!-- Botões de ação embaixo -->
+    <bottom>
+        <HBox alignment="CENTER" spacing="10" style="-fx-padding: 10;">
+             <Button id="btnAdicionar" onAction="#onAdicionar" text="Adicionar" />
+            <Button text="Editar" onAction="#onEditar" />
+            <Button onAction="#onRemover" text="Remover" />
+            <Button onAction="#onMudarStatus" text="Mudar Status" />
+        </HBox>
+    </bottom>
+</BorderPane>
