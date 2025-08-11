@@ -11,6 +11,7 @@ public class AdicionarEquipamentoController {
     @FXML private TextField txtGLPI;
     @FXML private TextField txtPatrimonio;
     @FXML private TextField txtNumeroSerie;
+    @FXML private TextField txtDescricaoMarcaModelo;
     @FXML private TextField txtDefeito;
     @FXML private TextField txtBatalhao;
     @FXML private TextField txtchamadoEmpresa;
@@ -32,6 +33,7 @@ public class AdicionarEquipamentoController {
     	String GLPI = txtGLPI.getText().trim();
         String numeroSerie = txtNumeroSerie.getText().trim();
         String patrimonio = txtPatrimonio.getText().trim();
+        String descricaoMarcaModelo = txtDescricaoMarcaModelo.getText().trim();
         String defeito = txtDefeito.getText().trim();
         String batalhao = txtBatalhao.getText().trim();
         String chamadoEmpresa = txtchamadoEmpresa.getText().trim();
@@ -46,7 +48,7 @@ public class AdicionarEquipamentoController {
             return; 
         }
 
-        equipamentoSalvo = new Equipment(GLPI, numeroSerie, patrimonio, defeito, batalhao, chamadoEmpresa, status);
+        equipamentoSalvo = new Equipment(GLPI, numeroSerie, patrimonio, descricaoMarcaModelo, defeito, batalhao, chamadoEmpresa, status);
         fecharJanela();
     }
 
@@ -65,8 +67,9 @@ public class AdicionarEquipamentoController {
 	public void preencherCampos(Equipment equipamento) {
 	if (equipamento == null) return;
 	txtGLPI.setText(equipamento.getGLPI());
-	txtNumeroSerie.setText(equipamento.getNumeroSerie());
+        txtNumeroSerie.setText(equipamento.getNumeroSerie());
     txtPatrimonio.setText(equipamento.getPatrimonio());
+    txtDescricaoMarcaModelo.setText(equipamento.getDescricaoMarcaModelo());
     txtDefeito.setText(equipamento.getDefeito());
     txtBatalhao.setText(equipamento.getBatalhao());
     txtchamadoEmpresa.setText(equipamento.getChamadoEmpresa());
