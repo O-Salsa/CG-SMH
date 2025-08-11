@@ -34,8 +34,9 @@ public class MainController {
 	@FXML private TableView<Equipment> tabelaEquipamentos;
 	@FXML private TableColumn<Equipment, String> colGLPI;
 	@FXML private TableColumn<Equipment, String> colPatrimonio;
-	@FXML private TableColumn<Equipment, String> colNumeroSerie;
-	@FXML private TableColumn<Equipment, String> colDefeito;
+        @FXML private TableColumn<Equipment, String> colNumeroSerie;
+        @FXML private TableColumn<Equipment, String> colDescricaoMarcaModelo;
+        @FXML private TableColumn<Equipment, String> colDefeito;
 	@FXML private TableColumn<Equipment, String> colBatalhao;
 	@FXML private TableColumn<Equipment, String> colChamadoEmpresa;
 	@FXML private TableColumn<Equipment, String> colStatus;
@@ -50,8 +51,9 @@ public class MainController {
         criarPastaPadraoSeNecessario();
     	colGLPI.setCellValueFactory(new PropertyValueFactory<>("GLPI"));
     	colPatrimonio.setCellValueFactory(new PropertyValueFactory<>("patrimonio"));
-    	colNumeroSerie.setCellValueFactory(new PropertyValueFactory<>("numeroSerie"));
-    	colDefeito.setCellValueFactory(new PropertyValueFactory<>("defeito"));
+        colNumeroSerie.setCellValueFactory(new PropertyValueFactory<>("numeroSerie"));
+        colDescricaoMarcaModelo.setCellValueFactory(new PropertyValueFactory<>("descricaoMarcaModelo"));
+        colDefeito.setCellValueFactory(new PropertyValueFactory<>("defeito"));
     	colBatalhao.setCellValueFactory(new PropertyValueFactory<>("batalhao"));
     	colChamadoEmpresa.setCellValueFactory(new PropertyValueFactory<>("chamadoEmpresa"));
     	colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
@@ -68,7 +70,7 @@ public class MainController {
         File arquivo = new File(CAMINHO_CSV_PADRAO);
         if (!arquivo.exists()) {
             try (PrintWriter writer = new PrintWriter(new FileWriter(arquivo))) {
-                writer.println("GLPI,Patrimonio,NumeroSerie,Defeito,Batalhao,ChamadoEmpresa,Status");
+                writer.println("GLPI,Patrimonio,NumeroSerie,DescricaoMarcaModelo,Defeito,Batalhao,ChamadoEmpresa,Status");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -203,8 +205,9 @@ public class MainController {
 		if(editado != null) {
 			selecionado.setGLPI(editado.getGLPI());
 			selecionado.setPatrimonio(editado.getPatrimonio());
-			selecionado.setNumeroSerie(editado.getNumeroSerie());
-			selecionado.setDefeito(editado.getDefeito());
+                        selecionado.setNumeroSerie(editado.getNumeroSerie());
+                        selecionado.setDescricaoMarcaModelo(editado.getDescricaoMarcaModelo());
+                        selecionado.setDefeito(editado.getDefeito());
 			selecionado.setBatalhao(editado.getBatalhao());
 			selecionado.setChamadoEmpresa(editado.getChamadoEmpresa());
 			selecionado.setStatus(editado.getStatus());
@@ -219,13 +222,14 @@ public class MainController {
 
     private void salvarEquipamentosEmCSV(String caminhoArquivo) {
     	try (PrintWriter writer = new PrintWriter(new FileWriter(caminhoArquivo))) {
-            writer.println("GLPI,Patrimonio,NumeroSerie,Defeito,Batalhao,ChamadoEmpresa,Status");
+            writer.println("GLPI,Patrimonio,NumeroSerie,DescricaoMarcaModelo,Defeito,Batalhao,ChamadoEmpresa,Status");
 
             for (Equipment eq : equipamentos) {
-                writer.printf("%s,%s,%s,%s,%s,%s,%s%n",
+                writer.printf("%s,%s,%s,%s,%s,%s,%s,%s%n",
                     eq.getGLPI(),
                     eq.getPatrimonio(),
                     eq.getNumeroSerie(),
+                    eq.getDescricaoMarcaModelo(),
                     eq.getDefeito(),
                     eq.getBatalhao(),
                     eq.getChamadoEmpresa(),
@@ -259,15 +263,16 @@ public class MainController {
             String linha = reader.readLine(); 
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(",", -1);
-                if (dados.length == 7) {
+                if (dados.length == 8) {
                     equipamentos.add(new Equipment(
                         dados[0], // GLPI
                         dados[2], // NumeroSerie
                         dados[1], // Patrimonio
-                        dados[3], // Defeito
-                        dados[4], // Batalhao
-                        dados[5], // ChamadoEmpresa
-                        dados[6]  // Status
+                        dados[3], // DescricaoMarcaModelo
+                        dados[4], // Defeito
+                        dados[5], // Batalhao
+                        dados[6], // ChamadoEmpresa
+                        dados[7]  // Status
                     ));
                 }
             }
