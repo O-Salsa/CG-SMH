@@ -25,7 +25,7 @@ public class AdicionarEquipamentoController {
     
     @FXML
     private void initialize() {
-        cboxStatus.getItems().addAll("Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução");
+        cboxStatus.getItems().addAll("Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução", "Fechado");
     }
     
     @FXML
