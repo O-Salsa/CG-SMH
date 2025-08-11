@@ -160,8 +160,8 @@ public class MainController {
     		alerta.showAndWait();
     		return;
     	}
-    	javafx.scene.control.ChoiceDialog<String> dialog = new javafx.scene.control.ChoiceDialog<String>(
-    			selecionado.getStatus(),"Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução");
+        javafx.scene.control.ChoiceDialog<String> dialog = new javafx.scene.control.ChoiceDialog<String>(
+                        selecionado.getStatus(),"Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução", "Fechado");
     	dialog.setTitle("Mudar Status");
     	dialog.setHeaderText("Alterar o status do equipamento selecionado");
     	dialog.setContentText("Escolha o novo status");
