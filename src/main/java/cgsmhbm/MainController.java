@@ -14,22 +14,21 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.*;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.prefs.Preferences;
 import javafx.stage.FileChooser;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 
 
 public class MainController {
 	
-	private static final String CAMINHO_CSV_PADRAO = System.getProperty("user.home")
-	        + File.separator + "Documents"
-	        + File.separator + "CGSMH"
-	        + File.separator + "equipamentos.csv";;
-	private static final String PREFS_KEY = "ultimo_csv";	
+    private static final String CAMINHO_XLSX_PADRAO = System.getProperty("user.home")
+            + File.separator + "Documents"
+            + File.separator + "CGSMH"
+            + File.separator + "equipamentos.xlsx";
+    private static final String PREFS_KEY = "ultimo_excel";
 	
 	@FXML private TableView<Equipment> tabelaEquipamentos;
 	@FXML private TableColumn<Equipment, String> colGLPI;
@@ -59,18 +58,30 @@ public class MainController {
     	colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         tabelaEquipamentos.setItems(equipamentos);
         
-        carregarEquipamentosDoCSV(obterCaminhoUltimoArquivo());
+        
+        
+        carregarEquipamentosDoExcel(obterCaminhoUltimoArquivo());
     }
 
+    
+    
     private void criarPastaPadraoSeNecessario() {
         File pasta = new File(System.getProperty("user.home") + File.separator + "Documents" + File.separator + "CGSMH");
         if (!pasta.exists()) {
             pasta.mkdirs();
         }
-        File arquivo = new File(CAMINHO_CSV_PADRAO);
+        File arquivo = new File(CAMINHO_XLSX_PADRAO);
         if (!arquivo.exists()) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(arquivo))) {
-                writer.println("GLPI,Patrimonio,NumeroSerie,DescricaoMarcaModelo,Defeito,Batalhao,ChamadoEmpresa,Status");
+        	try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("Equipamentos");
+                Row header = sheet.createRow(0);
+                String[] headers = {"GLPI","Patrimonio","NumeroSerie","DescricaoMarcaModelo","Defeito","Batalhao","ChamadoEmpresa","Status"};
+                for (int i = 0; i < headers.length; i++) {
+                    header.createCell(i).setCellValue(headers[i]);
+                }
+                try (FileOutputStream fos = new FileOutputStream(arquivo)) {
+                    workbook.write(fos);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -93,7 +104,7 @@ public class MainController {
             Equipment novo = controller.getEquipamentoSalvo();
             if (novo != null) {
             	equipamentos.add(novo);
-            	salvarEquipamentosEmCSV(obterCaminhoUltimoArquivo());
+                salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
 
             }
         } catch (Exception e) {
@@ -144,7 +155,7 @@ public class MainController {
     	java.util.Optional<javafx.scene.control.ButtonType> resposta = confirmacao.showAndWait();
     	if (resposta.isPresent() && resposta.get() == javafx.scene.control.ButtonType.OK) {
     		tabelaEquipamentos.getItems().remove(selecionado);
-    		salvarEquipamentosEmCSV(obterCaminhoUltimoArquivo());
+            salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
 
     	}
     	
@@ -163,7 +174,7 @@ public class MainController {
     		return;
     	}
     	javafx.scene.control.ChoiceDialog<String> dialog = new javafx.scene.control.ChoiceDialog<String>(
-    			selecionado.getStatus(),"Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução");
+    			selecionado.getStatus(),"Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução", "Fechado");
     	dialog.setTitle("Mudar Status");
     	dialog.setHeaderText("Alterar o status do equipamento selecionado");
     	dialog.setContentText("Escolha o novo status");
@@ -172,7 +183,7 @@ public class MainController {
     	resultado.ifPresent(novoStatus -> {
     		selecionado.setStatus(novoStatus);
     		tabelaEquipamentos.refresh();
-    		salvarEquipamentosEmCSV(obterCaminhoUltimoArquivo());
+            salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
 
     		});	
     }
@@ -212,7 +223,7 @@ public class MainController {
 			selecionado.setChamadoEmpresa(editado.getChamadoEmpresa());
 			selecionado.setStatus(editado.getStatus());
 			tabelaEquipamentos.refresh();
-			salvarEquipamentosEmCSV(obterCaminhoUltimoArquivo());
+            salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
 
 		}
 	}catch (Exception e) {
@@ -220,21 +231,31 @@ public class MainController {
 	}
 }
 
-    private void salvarEquipamentosEmCSV(String caminhoArquivo) {
-    	try (PrintWriter writer = new PrintWriter(new FileWriter(caminhoArquivo))) {
-            writer.println("GLPI,Patrimonio,NumeroSerie,DescricaoMarcaModelo,Defeito,Batalhao,ChamadoEmpresa,Status");
+    private void salvarEquipamentosEmExcel(String caminhoArquivo) {
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Equipamentos");
+            Row header = sheet.createRow(0);
+            String[] headers = {"GLPI","Patrimonio","NumeroSerie","DescricaoMarcaModelo","Defeito","Batalhao","ChamadoEmpresa","Status"};
+            for (int i = 0; i < headers.length; i++) {
+                header.createCell(i).setCellValue(headers[i]);
+            }
+
+            int rowIndex = 1;
 
             for (Equipment eq : equipamentos) {
-                writer.printf("%s,%s,%s,%s,%s,%s,%s,%s%n",
-                    eq.getGLPI(),
-                    eq.getPatrimonio(),
-                    eq.getNumeroSerie(),
-                    eq.getDescricaoMarcaModelo(),
-                    eq.getDefeito(),
-                    eq.getBatalhao(),
-                    eq.getChamadoEmpresa(),
-                    eq.getStatus()
-                );
+            	 Row row = sheet.createRow(rowIndex++);
+                 row.createCell(0).setCellValue(eq.getGLPI());
+                 row.createCell(1).setCellValue(eq.getPatrimonio());
+                 row.createCell(2).setCellValue(eq.getNumeroSerie());
+                 row.createCell(3).setCellValue(eq.getDescricaoMarcaModelo());
+                 row.createCell(4).setCellValue(eq.getDefeito());
+                 row.createCell(5).setCellValue(eq.getBatalhao());
+                 row.createCell(6).setCellValue(eq.getChamadoEmpresa());
+                 row.createCell(7).setCellValue(eq.getStatus());
+             }
+
+             try (FileOutputStream fos = new FileOutputStream(caminhoArquivo)) {
+                 workbook.write(fos);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -243,47 +264,54 @@ public class MainController {
 
     @FXML
     private void onCarregarArquivo() {
-    	FileChooser fileChooser = new FileChooser();
-    	fileChooser.setTitle("Selecione o arquivo CSV");
-    	fileChooser.getExtensionFilters().add(
-    			new FileChooser.ExtensionFilter("Arquivos CSV", "*.csv"));
-    	
-    	File arquivo = fileChooser.showOpenDialog(tabelaEquipamentos.getScene().getWindow());
-    	if (arquivo != null) {
-    	carregarEquipamentosDoCSV(arquivo.getAbsolutePath());
-    	salvarCaminhoUltimoArquivo(arquivo.getAbsolutePath());
-    	}
+    	  FileChooser fileChooser = new FileChooser();
+          fileChooser.setTitle("Selecione a planilha");
+          fileChooser.getExtensionFilters().add(
+                          new FileChooser.ExtensionFilter("Planilhas Excel", "*.xlsx"));
+
+          File arquivo = fileChooser.showOpenDialog(tabelaEquipamentos.getScene().getWindow());
+          if (arquivo != null) {
+          carregarEquipamentosDoExcel(arquivo.getAbsolutePath());
+          salvarCaminhoUltimoArquivo(arquivo.getAbsolutePath());
+          }
     }
 
-    private void carregarEquipamentosDoCSV(String caminhoArquivo) {
+    private void carregarEquipamentosDoExcel(String caminhoArquivo) {
         equipamentos.clear();
         File file = new File(caminhoArquivo);
         if (!file.exists()) return;
-        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
-            String linha = reader.readLine(); 
-            while ((linha = reader.readLine()) != null) {
-                String[] dados = linha.split(",", -1);
-                if (dados.length == 8) {
-                    equipamentos.add(new Equipment(
-                        dados[0], // GLPI
-                        dados[2], // NumeroSerie
-                        dados[1], // Patrimonio
-                        dados[3], // DescricaoMarcaModelo
-                        dados[4], // Defeito
-                        dados[5], // Batalhao
-                        dados[6], // ChamadoEmpresa
-                        dados[7]  // Status
-                    ));
-                }
+        try (FileInputStream fis = new FileInputStream(file);
+                Workbook workbook = new XSSFWorkbook(fis)) {
+               Sheet sheet = workbook.getSheetAt(0);
+               for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                   Row row = sheet.getRow(i);
+                   if (row == null) continue;
+                   equipamentos.add(new Equipment(
+                           getCellValue(row,0),
+                           getCellValue(row,2),
+                           getCellValue(row,1),
+                           getCellValue(row,3),
+                           getCellValue(row,4),
+                           getCellValue(row,5),
+                           getCellValue(row,6),
+                           getCellValue(row,7)
+                   ));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private String getCellValue(Row row, int index) {
+        Cell cell = row.getCell(index, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+        cell.setCellType(CellType.STRING);
+        return cell.getStringCellValue();
+    }
+
+
     private String obterCaminhoUltimoArquivo() {
     	Preferences prefs = Preferences.userNodeForPackage(MainController.class);
-    	return prefs.get(PREFS_KEY, CAMINHO_CSV_PADRAO);
+        return prefs.get(PREFS_KEY, CAMINHO_XLSX_PADRAO);
     }
     
     private void salvarCaminhoUltimoArquivo(String caminho) {

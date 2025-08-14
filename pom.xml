@@ -6,12 +6,18 @@
   <groupId>cgsmhbm</groupId>
   <artifactId>cgsmhbm</artifactId>
   <version>1.0-SNAPSHOT</version>
+  
 <properties>
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   <maven.compiler.source>21</maven.compiler.source>
   <maven.compiler.target>21</maven.compiler.target>
   <javafx.version>21.0.2</javafx.version>
+  <log4j2.version>2.25.1</log4j2.version>
+
 </properties>
+
+
+
   <dependencies>
     <!-- JavaFX controls -->
     <dependency>
@@ -24,9 +30,23 @@
       <artifactId>javafx-fxml</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+     <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.2.5</version>
+    </dependency>
   </dependencies>
+  
   <build>
     <plugins>
+   		 <plugin>
+      		  <groupId>org.openjfx</groupId>
+     		   <artifactId>javafx-maven-plugin</artifactId>
+      	 	 <version>0.0.8</version>
+       	 <configuration>
+       	   <mainClass>cgsmhbm.Program</mainClass>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>

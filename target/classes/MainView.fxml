@@ -45,8 +45,9 @@
             <columns>
             	<TableColumn fx:id="colGLPI" prefWidth="76.0" text="GLPI" />
                 <TableColumn fx:id="colPatrimonio" prefWidth="105.0" text="Patrimônio" />
-       			<TableColumn fx:id="colNumeroSerie" prefWidth="173.0" text="Nº de Série" />
-      			<TableColumn fx:id="colDefeito" prefWidth="346.0" text="Defeito" />
+                        <TableColumn fx:id="colNumeroSerie" prefWidth="173.0" text="Nº de Série" />
+                        <TableColumn fx:id="colDescricaoMarcaModelo" prefWidth="200.0" text="Descrição Marca/Modelo" />
+                        <TableColumn fx:id="colDefeito" prefWidth="346.0" text="Defeito" />
         		<TableColumn fx:id="colBatalhao" minWidth="9.0" prefWidth="120.0" text="Batalhão" />
           		<TableColumn fx:id="colChamadoEmpresa" minWidth="0.0" prefWidth="148.0" text="Cod. Chamado Empresa" />
         		<TableColumn fx:id="colStatus" prefWidth="245.0" text="Status" />
