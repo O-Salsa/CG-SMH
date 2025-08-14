@@ -10,6 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -40,6 +42,8 @@ public class MainController {
 	@FXML private TableColumn<Equipment, String> colChamadoEmpresa;
 	@FXML private TableColumn<Equipment, String> colStatus;
     @FXML private TextField campoBusca;
+    @FXML private Button btnEditar;
+    @FXML private Button btnRemover;
 
     private ObservableList<Equipment> equipamentos = FXCollections.observableArrayList();
 
@@ -48,17 +52,31 @@ public class MainController {
     @FXML 
     public void initialize() {
         criarPastaPadraoSeNecessario();
-    	colGLPI.setCellValueFactory(new PropertyValueFactory<>("GLPI"));
-    	colPatrimonio.setCellValueFactory(new PropertyValueFactory<>("patrimonio"));
+        colGLPI.setCellValueFactory(new PropertyValueFactory<>("GLPI"));
+        colPatrimonio.setCellValueFactory(new PropertyValueFactory<>("patrimonio"));
         colNumeroSerie.setCellValueFactory(new PropertyValueFactory<>("numeroSerie"));
         colDescricaoMarcaModelo.setCellValueFactory(new PropertyValueFactory<>("descricaoMarcaModelo"));
         colDefeito.setCellValueFactory(new PropertyValueFactory<>("defeito"));
-    	colBatalhao.setCellValueFactory(new PropertyValueFactory<>("batalhao"));
-    	colChamadoEmpresa.setCellValueFactory(new PropertyValueFactory<>("chamadoEmpresa"));
-    	colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colBatalhao.setCellValueFactory(new PropertyValueFactory<>("batalhao"));
+        colChamadoEmpresa.setCellValueFactory(new PropertyValueFactory<>("chamadoEmpresa"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         tabelaEquipamentos.setItems(equipamentos);
         
-        
+        var selectedStatus = javafx.beans.binding.Bindings.selectString(
+                tabelaEquipamentos.getSelectionModel().selectedItemProperty(),
+                "status"
+        );
+
+        var isFechado = javafx.beans.binding.Bindings.createBooleanBinding(
+                () -> {
+                    String s = selectedStatus.get();
+                    return s != null && "Fechado".equalsIgnoreCase(s);
+                },
+                selectedStatus
+        );
+
+        btnEditar.disableProperty().bind(isFechado);
+        btnRemover.disableProperty().bind(isFechado); 
         
         carregarEquipamentosDoExcel(obterCaminhoUltimoArquivo());
     }
@@ -138,16 +156,24 @@ public class MainController {
 
     @FXML
     private void onRemover() {
-    	Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
-    	if (selecionado == null) {
-    		javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
-    		alerta.setTitle("Remover");
-    		alerta.setHeaderText(null);
-    		alerta.setContentText("Selecione um equipamento para remover.");
-    		alerta.showAndWait();
-    		return;
-    	 }
-    	javafx.scene.control.Alert confirmacao = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    	 Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
+         if (selecionado == null) {
+                 javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+                 alerta.setTitle("Remover");
+                 alerta.setHeaderText(null);
+                 alerta.setContentText("Selecione um equipamento para remover.");
+                 alerta.showAndWait();
+                 return;
+          }
+         if ("Fechado".equalsIgnoreCase(selecionado.getStatus())) {
+                 javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+                 alerta.setTitle("Chamado fechado");
+                 alerta.setHeaderText(null);
+                 alerta.setContentText("O chamado está fechado!");
+                 alerta.showAndWait();
+                 return;
+         }
+         javafx.scene.control.Alert confirmacao = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
     	confirmacao.setTitle("Confirmação");
     	confirmacao.setHeaderText("Remover equipamento");
     	confirmacao.setContentText("Tem certeza que deseja remover o equipamento selecionado?");
@@ -190,18 +216,26 @@ public class MainController {
 
     @FXML 
     private void onEditar() {
-	Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
-	if (selecionado == null) {
-		javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
-		alerta.setTitle("Editar");
-		alerta.setHeaderText("Editar informações");
-		alerta.setContentText("Selecione um equipamento para ser editado!");
-		alerta.showAndWait();
-		return;	
-	}
-	try {
-		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/AddEquipmentView.fxml"));
-		Parent root = fxmlLoader.load();
+        Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
+        if (selecionado == null) {
+                javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+                alerta.setTitle("Editar");
+                alerta.setHeaderText("Editar informações");
+                alerta.setContentText("Selecione um equipamento para ser editado!");
+                alerta.showAndWait();
+                return;
+        }
+        if ("Fechado".equalsIgnoreCase(selecionado.getStatus())) {
+                javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+                alerta.setTitle("Chamado fechado");
+                alerta.setHeaderText(null);
+                alerta.setContentText("O chamado está fechado!");
+                alerta.showAndWait();
+                return;
+        }
+        try {
+                FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/AddEquipmentView.fxml"));
+                Parent root = fxmlLoader.load();
 		
 		AdicionarEquipamentoController controller = fxmlLoader.getController();
 		controller.preencherCampos(selecionado);

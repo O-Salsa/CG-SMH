@@ -59,8 +59,8 @@
     <bottom>
         <HBox alignment="CENTER" spacing="10" style="-fx-padding: 10;">
              <Button id="btnAdicionar" onAction="#onAdicionar" text="Adicionar" />
-            <Button text="Editar" onAction="#onEditar" />
-            <Button onAction="#onRemover" text="Remover" />
+            <Button fx:id="btnEditar" text="Editar" onAction="#onEditar" />
+            <Button fx:id="btnRemover" onAction="#onRemover" text="Remover" />
             <Button onAction="#onMudarStatus" text="Mudar Status" />
         </HBox>
     </bottom>
