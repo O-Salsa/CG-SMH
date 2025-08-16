@@ -57,6 +57,8 @@ public class AdicionarEquipamentoController {
         String atualizadoEm = agora;
 
         equipamentoSalvo = new Equipment(GLPI, numeroSerie, patrimonio, descricaoMarcaModelo, defeito, batalhao, chamadoEmpresa, status, criadoEm, atualizadoEm);
+        fecharJanela();
+
     }
 
     private void fecharJanela() {

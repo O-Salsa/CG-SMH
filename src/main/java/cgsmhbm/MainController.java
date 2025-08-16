@@ -30,7 +30,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
@@ -217,37 +216,38 @@ public class MainController {
     
     @FXML
     private void onMudarStatus() {
-    	Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
-    	
-    	if (selecionado == null) {
-    		javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
-    		alerta.setTitle("Mudar Status");
-    		alerta.setHeaderText(null);
-    		alerta.setContentText("Selecione um equipamento para mudar o Status!");
-    		alerta.showAndWait();
-    		return;
-    	}
-    	javafx.scene.control.ChoiceDialog<EquipmentStatus> dialog = new javafx.scene.control.ChoiceDialog<>(
-    			selecionado.getStatus(),EquipmentStatus.values());
-    	dialog.setTitle("Mudar Status");
-    	dialog.setHeaderText("Alterar o status do equipamento selecionado");
-    	dialog.setContentText("Escolha o novo status");
-    	
-        dialog.setConverter(new javafx.util.StringConverter<>() {
-            @Override public String toString(EquipmentStatus s) { return s == null ? "" : s.label(); }
-            @Override public EquipmentStatus fromString(String s) { return EquipmentStatus.fromLabel(s); }
-        });
+        Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
+
+        if (selecionado == null) {
+            javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+            alerta.setTitle("Mudar Status");
+            alerta.setHeaderText(null);
+            alerta.setContentText("Selecione um equipamento para mudar o Status!");
+            alerta.showAndWait();
+            return;
+        }
+
+        // Pega o status atual ou null
+        EquipmentStatus statusAtual = selecionado.getStatus();
+
+        // Cria o diálogo já com os valores do enum
+        javafx.scene.control.ChoiceDialog<EquipmentStatus> dialog = new javafx.scene.control.ChoiceDialog<>(
+                statusAtual, EquipmentStatus.values());
+        dialog.setTitle("Mudar Status");
+        dialog.setHeaderText("Alterar o status do equipamento selecionado");
+        dialog.setContentText("Escolha o novo status");
 
         dialog.showAndWait().ifPresent(novoStatus -> {
             selecionado.setStatus(novoStatus);
-            selecionado.setAtualizadoEm(LocalDateTime.now().format(FORMATTER)); 
-            labelInfo.setText(String.format("Criado em: %s | Última modificação: %s",
-                    selecionado.getCriadoEm(), selecionado.getAtualizadoEm()));
+            selecionado.setAtualizadoEm(java.time.LocalDateTime.now().format(FORMATTER));
+            labelInfo.setText("Criado em: %s | Última modificação: %s"
+                    .formatted(selecionado.getCriadoEm(), selecionado.getAtualizadoEm()));
 
-            salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
             tabelaEquipamentos.refresh();
+            salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
         });
     }
+
     @FXML 
     private void onEditar() {
         Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
