@@ -2,6 +2,8 @@ package cgsmhbm;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 public class Equipment {
 
@@ -12,10 +14,12 @@ public class Equipment {
     private final StringProperty defeito = new SimpleStringProperty(this, "defeito", "");
     private final StringProperty batalhao = new SimpleStringProperty(this, "batalhao", "");
     private final StringProperty chamadoEmpresa = new SimpleStringProperty(this, "chamadoEmpresa", "");
-    private final StringProperty status = new SimpleStringProperty(this, "status", "");
+    private final ObjectProperty<EquipmentStatus> status = new SimpleObjectProperty<>(this, "status", null);
+    private final StringProperty criadoEm = new SimpleStringProperty(this, "criadoEm", "");
+    private final StringProperty atualizadoEm = new SimpleStringProperty(this, "atualizadoEm", "");
 
     public Equipment(String glpi, String numeroSerie, String patrimonio, String descricaoMarcaModelo,
-                     String defeito, String batalhao, String chamadoEmpresa, String status) {
+                     String defeito, String batalhao, String chamadoEmpresa, EquipmentStatus status, String criadoEm, String atualizadoEm) {
         setGLPI(glpi);
         setNumeroSerie(numeroSerie);
         setPatrimonio(patrimonio);
@@ -24,6 +28,8 @@ public class Equipment {
         setBatalhao(batalhao);
         setChamadoEmpresa(chamadoEmpresa);
         setStatus(status);
+        setCriadoEm(criadoEm);
+        setAtualizadoEm(atualizadoEm);
     }
 
     // GLPI
@@ -62,7 +68,17 @@ public class Equipment {
     public StringProperty chamadoEmpresaProperty() { return chamadoEmpresa; }
 
     // Status
-    public String getStatus() { return status.get(); }
-    public void setStatus(String v) { status.set(v); }
-    public StringProperty statusProperty() { return status; }
+    public EquipmentStatus getStatus() { return status.get(); }
+    public void setStatus(EquipmentStatus v) { status.set(v); }
+    public ObjectProperty<EquipmentStatus> statusProperty() { return status; }
+
+    // Criado em
+    public String getCriadoEm() { return criadoEm.get(); }
+    public void setCriadoEm(String v) { criadoEm.set(v); }
+    public StringProperty criadoEmProperty() { return criadoEm; }
+
+    // Atualizado em
+    public String getAtualizadoEm() { return atualizadoEm.get(); }
+    public void setAtualizadoEm(String v) { atualizadoEm.set(v); }
+    public StringProperty atualizadoEmProperty() { return atualizadoEm; }
 }

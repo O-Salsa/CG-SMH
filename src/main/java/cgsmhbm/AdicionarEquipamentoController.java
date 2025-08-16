@@ -5,6 +5,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
 import javafx.event.ActionEvent;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class AdicionarEquipamentoController {
 	
@@ -15,9 +17,11 @@ public class AdicionarEquipamentoController {
     @FXML private TextField txtDefeito;
     @FXML private TextField txtBatalhao;
     @FXML private TextField txtchamadoEmpresa;
-    @FXML private ComboBox<String> cboxStatus;
+    @FXML private ComboBox<EquipmentStatus> cboxStatus;
     
     private Equipment equipamentoSalvo = null;
+    private Equipment equipamentoOriginal = null;
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     
     public Equipment getEquipamentoSalvo() {
         return equipamentoSalvo;
@@ -25,7 +29,7 @@ public class AdicionarEquipamentoController {
     
     @FXML
     private void initialize() {
-        cboxStatus.getItems().addAll("Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução", "Fechado");
+        cboxStatus.getItems().addAll(EquipmentStatus.values());
     }
     
     @FXML
@@ -37,9 +41,9 @@ public class AdicionarEquipamentoController {
         String defeito = txtDefeito.getText().trim();
         String batalhao = txtBatalhao.getText().trim();
         String chamadoEmpresa = txtchamadoEmpresa.getText().trim();
-        String status = (cboxStatus.getValue() != null) ? cboxStatus.getValue().trim() : "";
+        EquipmentStatus status = cboxStatus.getValue();
 
-        if (numeroSerie.isEmpty() || patrimonio.isEmpty() || defeito.isEmpty() || batalhao.isEmpty() || status.isEmpty()) {
+        if (numeroSerie.isEmpty() || patrimonio.isEmpty() || defeito.isEmpty() || batalhao.isEmpty() || status == null) {
             javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
             alerta.setTitle("Campos obrigatórios");
             alerta.setHeaderText(null);
@@ -48,8 +52,11 @@ public class AdicionarEquipamentoController {
             return; 
         }
 
-        equipamentoSalvo = new Equipment(GLPI, numeroSerie, patrimonio, descricaoMarcaModelo, defeito, batalhao, chamadoEmpresa, status);
-        fecharJanela();
+        String agora = LocalDateTime.now().format(FORMATTER);
+        String criadoEm = (equipamentoOriginal != null) ? equipamentoOriginal.getCriadoEm() : agora;
+        String atualizadoEm = agora;
+
+        equipamentoSalvo = new Equipment(GLPI, numeroSerie, patrimonio, descricaoMarcaModelo, defeito, batalhao, chamadoEmpresa, status, criadoEm, atualizadoEm);
     }
 
     private void fecharJanela() {
@@ -63,16 +70,17 @@ public class AdicionarEquipamentoController {
     	stage.close();
     }
 
-@FXML 
-	public void preencherCampos(Equipment equipamento) {
-	if (equipamento == null) return;
-	txtGLPI.setText(equipamento.getGLPI());
+    @FXML
+    public void preencherCampos(Equipment equipamento) {
+        if (equipamento == null) return;
+        equipamentoOriginal = equipamento;
+        txtGLPI.setText(equipamento.getGLPI());
         txtNumeroSerie.setText(equipamento.getNumeroSerie());
-    txtPatrimonio.setText(equipamento.getPatrimonio());
-    txtDescricaoMarcaModelo.setText(equipamento.getDescricaoMarcaModelo());
-    txtDefeito.setText(equipamento.getDefeito());
-    txtBatalhao.setText(equipamento.getBatalhao());
-    txtchamadoEmpresa.setText(equipamento.getChamadoEmpresa());
-    cboxStatus.setValue(equipamento.getStatus());
-}
+        txtPatrimonio.setText(equipamento.getPatrimonio());
+        txtDescricaoMarcaModelo.setText(equipamento.getDescricaoMarcaModelo());
+        txtDefeito.setText(equipamento.getDefeito());
+        txtBatalhao.setText(equipamento.getBatalhao());
+        txtchamadoEmpresa.setText(equipamento.getChamadoEmpresa());
+        cboxStatus.setValue(equipamento.getStatus());
+    }
 }

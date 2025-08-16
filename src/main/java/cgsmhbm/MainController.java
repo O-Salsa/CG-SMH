@@ -1,36 +1,51 @@
 package cgsmhbm;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.prefs.Preferences;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Button;
-import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.io.*;
-import java.util.prefs.Preferences;
-import javafx.stage.FileChooser;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 
 
 
 
 public class MainController {
 	
-    private static final String CAMINHO_XLSX_PADRAO = System.getProperty("user.home")
-            + File.separator + "Documents"
-            + File.separator + "CGSMH"
-            + File.separator + "equipamentos.xlsx";
+    private static final Path CAMINHO_XLSX_PADRAO =
+            Paths.get(System.getProperty("user.home"), "Documents")
+                    .resolve("CGSMH")
+                    .resolve("equipamentos.xlsx");
     private static final String PREFS_KEY = "ultimo_excel";
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
 	
 	@FXML private TableView<Equipment> tabelaEquipamentos;
 	@FXML private TableColumn<Equipment, String> colGLPI;
@@ -40,10 +55,12 @@ public class MainController {
         @FXML private TableColumn<Equipment, String> colDefeito;
 	@FXML private TableColumn<Equipment, String> colBatalhao;
 	@FXML private TableColumn<Equipment, String> colChamadoEmpresa;
-	@FXML private TableColumn<Equipment, String> colStatus;
+	@FXML private TableColumn<Equipment, EquipmentStatus> colStatus;
     @FXML private TextField campoBusca;
     @FXML private Button btnEditar;
     @FXML private Button btnRemover;
+    @FXML private Label labelInfo;
+
 
     private ObservableList<Equipment> equipamentos = FXCollections.observableArrayList();
 
@@ -62,16 +79,23 @@ public class MainController {
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         tabelaEquipamentos.setItems(equipamentos);
         
-        var selectedStatus = javafx.beans.binding.Bindings.selectString(
+        tabelaEquipamentos.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                labelInfo.setText(String.format("Criado em: %s | Última modificação: %s", newSel.getCriadoEm(), newSel.getAtualizadoEm()));
+            } else {
+                labelInfo.setText("");
+            }
+        });
+
+        
+        var selectedStatus = javafx.beans.binding.Bindings.select(
                 tabelaEquipamentos.getSelectionModel().selectedItemProperty(),
                 "status"
         );
 
         var isFechado = javafx.beans.binding.Bindings.createBooleanBinding(
-                () -> {
-                    String s = selectedStatus.get();
-                    return s != null && "Fechado".equalsIgnoreCase(s);
-                },
+                () -> EquipmentStatus.FECHADO.equals(selectedStatus.getValue()),
+
                 selectedStatus
         );
 
@@ -84,27 +108,28 @@ public class MainController {
     
     
     private void criarPastaPadraoSeNecessario() {
-        File pasta = new File(System.getProperty("user.home") + File.separator + "Documents" + File.separator + "CGSMH");
-        if (!pasta.exists()) {
-            pasta.mkdirs();
-        }
-        File arquivo = new File(CAMINHO_XLSX_PADRAO);
-        if (!arquivo.exists()) {
-        	try (Workbook workbook = new XSSFWorkbook()) {
-                Sheet sheet = workbook.createSheet("Equipamentos");
-                Row header = sheet.createRow(0);
-                String[] headers = {"GLPI","Patrimonio","NumeroSerie","DescricaoMarcaModelo","Defeito","Batalhao","ChamadoEmpresa","Status"};
-                for (int i = 0; i < headers.length; i++) {
-                    header.createCell(i).setCellValue(headers[i]);
+        Path arquivo = CAMINHO_XLSX_PADRAO;
+        Path pasta = arquivo.getParent();
+        try {
+            Files.createDirectories(pasta);
+            if (Files.notExists(arquivo)) {
+                try (Workbook workbook = new XSSFWorkbook()) {
+                    Sheet sheet = workbook.createSheet("Equipamentos");
+                    Row header = sheet.createRow(0);
+                    String[] headers = {"GLPI","Patrimonio","NumeroSerie","DescricaoMarcaModelo","Defeito","Batalhao","ChamadoEmpresa","Status","CriadoEm","AtualizadoEm"};
+                    for (int i = 0; i < headers.length; i++) {
+                        header.createCell(i).setCellValue(headers[i]);
+                    }
+                    try (OutputStream fos = Files.newOutputStream(arquivo)) {
+                        workbook.write(fos);
+                    }
                 }
-                try (FileOutputStream fos = new FileOutputStream(arquivo)) {
-                    workbook.write(fos);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
             }
         }
-    }
+    
     
     @FXML
     public void onAdicionar() {
@@ -121,7 +146,10 @@ public class MainController {
             stage.showAndWait();
             Equipment novo = controller.getEquipamentoSalvo();
             if (novo != null) {
-            	equipamentos.add(novo);
+                tabelaEquipamentos.getSelectionModel().select(novo);
+                labelInfo.setText(String.format("Criado em: %s | Última modificação: %s", novo.getCriadoEm(), novo.getAtualizadoEm()));
+                equipamentos.add(novo);
+
                 salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
 
             }
@@ -165,7 +193,7 @@ public class MainController {
                  alerta.showAndWait();
                  return;
           }
-         if ("Fechado".equalsIgnoreCase(selecionado.getStatus())) {
+         if (EquipmentStatus.FECHADO.equals(selecionado.getStatus())) {
                  javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
                  alerta.setTitle("Chamado fechado");
                  alerta.setHeaderText(null);
@@ -199,21 +227,27 @@ public class MainController {
     		alerta.showAndWait();
     		return;
     	}
-    	javafx.scene.control.ChoiceDialog<String> dialog = new javafx.scene.control.ChoiceDialog<String>(
-    			selecionado.getStatus(),"Aguardando abertura" , "Garantia acionada", "QAP - Aguardando devolução", "Fechado");
+    	javafx.scene.control.ChoiceDialog<EquipmentStatus> dialog = new javafx.scene.control.ChoiceDialog<>(
+    			selecionado.getStatus(),EquipmentStatus.values());
     	dialog.setTitle("Mudar Status");
     	dialog.setHeaderText("Alterar o status do equipamento selecionado");
     	dialog.setContentText("Escolha o novo status");
     	
-    	java.util.Optional<String> resultado = dialog.showAndWait();
-    	resultado.ifPresent(novoStatus -> {
-    		selecionado.setStatus(novoStatus);
-    		tabelaEquipamentos.refresh();
+        dialog.setConverter(new javafx.util.StringConverter<>() {
+            @Override public String toString(EquipmentStatus s) { return s == null ? "" : s.label(); }
+            @Override public EquipmentStatus fromString(String s) { return EquipmentStatus.fromLabel(s); }
+        });
+
+        dialog.showAndWait().ifPresent(novoStatus -> {
+            selecionado.setStatus(novoStatus);
+            selecionado.setAtualizadoEm(LocalDateTime.now().format(FORMATTER)); 
+            labelInfo.setText(String.format("Criado em: %s | Última modificação: %s",
+                    selecionado.getCriadoEm(), selecionado.getAtualizadoEm()));
+
             salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
-
-    		});	
+            tabelaEquipamentos.refresh();
+        });
     }
-
     @FXML 
     private void onEditar() {
         Equipment selecionado = tabelaEquipamentos.getSelectionModel().getSelectedItem();
@@ -225,7 +259,7 @@ public class MainController {
                 alerta.showAndWait();
                 return;
         }
-        if ("Fechado".equalsIgnoreCase(selecionado.getStatus())) {
+        if (EquipmentStatus.FECHADO.equals(selecionado.getStatus())) {
                 javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
                 alerta.setTitle("Chamado fechado");
                 alerta.setHeaderText(null);
@@ -247,29 +281,32 @@ public class MainController {
 		stage.showAndWait();
 		
 		Equipment editado = controller.getEquipamentoSalvo();
-		if(editado != null) {
-			selecionado.setGLPI(editado.getGLPI());
-			selecionado.setPatrimonio(editado.getPatrimonio());
-                        selecionado.setNumeroSerie(editado.getNumeroSerie());
-                        selecionado.setDescricaoMarcaModelo(editado.getDescricaoMarcaModelo());
-                        selecionado.setDefeito(editado.getDefeito());
-			selecionado.setBatalhao(editado.getBatalhao());
-			selecionado.setChamadoEmpresa(editado.getChamadoEmpresa());
-			selecionado.setStatus(editado.getStatus());
-			tabelaEquipamentos.refresh();
-            salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
+        if(editado != null) {
+            selecionado.setGLPI(editado.getGLPI());
+            selecionado.setPatrimonio(editado.getPatrimonio());
+            selecionado.setNumeroSerie(editado.getNumeroSerie());
+            selecionado.setDescricaoMarcaModelo(editado.getDescricaoMarcaModelo());
+            selecionado.setDefeito(editado.getDefeito());
+            selecionado.setBatalhao(editado.getBatalhao());
+            selecionado.setChamadoEmpresa(editado.getChamadoEmpresa());
+            selecionado.setStatus(editado.getStatus());
+            selecionado.setCriadoEm(editado.getCriadoEm());
+            selecionado.setAtualizadoEm(editado.getAtualizadoEm());
+            labelInfo.setText(String.format("Criado em: %s | Última modificação: %s", selecionado.getCriadoEm(), selecionado.getAtualizadoEm()));
+            tabelaEquipamentos.refresh();
+salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
 
-		}
+    }
 	}catch (Exception e) {
 		e.printStackTrace();
 	}
 }
 
-    private void salvarEquipamentosEmExcel(String caminhoArquivo) {
+    private void salvarEquipamentosEmExcel(Path caminhoArquivo) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Equipamentos");
             Row header = sheet.createRow(0);
-            String[] headers = {"GLPI","Patrimonio","NumeroSerie","DescricaoMarcaModelo","Defeito","Batalhao","ChamadoEmpresa","Status"};
+            String[] headers = {"GLPI","Patrimonio","NumeroSerie","DescricaoMarcaModelo","Defeito","Batalhao","ChamadoEmpresa","Status","CriadoEm","AtualizadoEm"};
             for (int i = 0; i < headers.length; i++) {
                 header.createCell(i).setCellValue(headers[i]);
             }
@@ -285,10 +322,12 @@ public class MainController {
                  row.createCell(4).setCellValue(eq.getDefeito());
                  row.createCell(5).setCellValue(eq.getBatalhao());
                  row.createCell(6).setCellValue(eq.getChamadoEmpresa());
-                 row.createCell(7).setCellValue(eq.getStatus());
+                 row.createCell(7).setCellValue(eq.getStatus() != null ? eq.getStatus().name() : "");
+                 row.createCell(8).setCellValue(eq.getCriadoEm());
+                 row.createCell(9).setCellValue(eq.getAtualizadoEm());
              }
 
-             try (FileOutputStream fos = new FileOutputStream(caminhoArquivo)) {
+            try (OutputStream fos = Files.newOutputStream(caminhoArquivo)) {
                  workbook.write(fos);
             }
         } catch (IOException e) {
@@ -305,30 +344,31 @@ public class MainController {
 
           File arquivo = fileChooser.showOpenDialog(tabelaEquipamentos.getScene().getWindow());
           if (arquivo != null) {
-          carregarEquipamentosDoExcel(arquivo.getAbsolutePath());
-          salvarCaminhoUltimoArquivo(arquivo.getAbsolutePath());
+              carregarEquipamentosDoExcel(arquivo.toPath());
+              salvarCaminhoUltimoArquivo(arquivo.toPath());
           }
     }
 
-    private void carregarEquipamentosDoExcel(String caminhoArquivo) {
+    private void carregarEquipamentosDoExcel(Path caminhoArquivo) {
         equipamentos.clear();
-        File file = new File(caminhoArquivo);
-        if (!file.exists()) return;
-        try (FileInputStream fis = new FileInputStream(file);
+        if (Files.notExists(caminhoArquivo)) return;
+        try (InputStream fis = Files.newInputStream(caminhoArquivo);
                 Workbook workbook = new XSSFWorkbook(fis)) {
-               Sheet sheet = workbook.getSheetAt(0);
-               for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                   Row row = sheet.getRow(i);
-                   if (row == null) continue;
-                   equipamentos.add(new Equipment(
-                           getCellValue(row,0),
-                           getCellValue(row,2),
-                           getCellValue(row,1),
-                           getCellValue(row,3),
-                           getCellValue(row,4),
-                           getCellValue(row,5),
-                           getCellValue(row,6),
-                           getCellValue(row,7)
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                equipamentos.add(new Equipment(
+                        getCellValue(row,0),
+                        getCellValue(row,2),
+                        getCellValue(row,1),
+                        getCellValue(row,3),
+                        getCellValue(row,4),
+                        getCellValue(row,5),
+                        getCellValue(row,6),
+                        parseStatus(getCellValue(row,7)),
+                        getCellValue(row,8),
+                        getCellValue(row,9)
                    ));
             }
         } catch (IOException e) {
@@ -343,14 +383,26 @@ public class MainController {
     }
 
 
-    private String obterCaminhoUltimoArquivo() {
-    	Preferences prefs = Preferences.userNodeForPackage(MainController.class);
-        return prefs.get(PREFS_KEY, CAMINHO_XLSX_PADRAO);
+    private EquipmentStatus parseStatus(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return EquipmentStatus.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
+
     
-    private void salvarCaminhoUltimoArquivo(String caminho) {
-    	Preferences prefs = Preferences.userNodeForPackage(MainController.class);
-    	prefs.put(PREFS_KEY, caminho);
+    private Path obterCaminhoUltimoArquivo() {
+        Preferences prefs = Preferences.userNodeForPackage(MainController.class);
+        return Paths.get(prefs.get(PREFS_KEY, CAMINHO_XLSX_PADRAO.toString()));
+    }
+
+    private void salvarCaminhoUltimoArquivo(Path caminho) {
+        Preferences prefs = Preferences.userNodeForPackage(MainController.class);
+        prefs.put(PREFS_KEY, caminho.toString());
     }
 
 }
