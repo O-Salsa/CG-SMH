@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -25,6 +26,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
@@ -53,15 +55,17 @@ public class MainController {
         @FXML private TableColumn<Equipment, String> colDescricaoMarcaModelo;
         @FXML private TableColumn<Equipment, String> colDefeito;
 	@FXML private TableColumn<Equipment, String> colBatalhao;
-	@FXML private TableColumn<Equipment, String> colChamadoEmpresa;
-	@FXML private TableColumn<Equipment, EquipmentStatus> colStatus;
+		@FXML private TableColumn<Equipment, String> colChamadoEmpresa;
+		@FXML private TableColumn<Equipment, EquipmentStatus> colStatus;
     @FXML private TextField campoBusca;
+    @FXML private ComboBox<String> comboFiltro;
     @FXML private Button btnEditar;
     @FXML private Button btnRemover;
     @FXML private Label labelInfo;
 
 
     private ObservableList<Equipment> equipamentos = FXCollections.observableArrayList();
+    private FilteredList<Equipment> equipamentosFiltrados;
 
     
 
@@ -76,7 +80,16 @@ public class MainController {
         colBatalhao.setCellValueFactory(new PropertyValueFactory<>("batalhao"));
         colChamadoEmpresa.setCellValueFactory(new PropertyValueFactory<>("chamadoEmpresa"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        tabelaEquipamentos.setItems(equipamentos);
+        equipamentosFiltrados = new FilteredList<>(equipamentos, e -> true);
+        tabelaEquipamentos.setItems(equipamentosFiltrados);
+
+        comboFiltro.setItems(FXCollections.observableArrayList(
+                "GLPI",
+                "Patrimônio",
+                "Nº de Série",
+                "Cod. Chamado Empresa"
+        ));
+        comboFiltro.getSelectionModel().selectFirst();
         
         tabelaEquipamentos.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
@@ -104,7 +117,32 @@ public class MainController {
         carregarEquipamentosDoExcel(obterCaminhoUltimoArquivo());
     }
 
-    
+    @FXML
+    private void onBuscar() {
+        String filtro = comboFiltro.getValue();
+        String termo = campoBusca.getText();
+
+        if (termo == null || termo.isBlank()) {
+            equipamentosFiltrados.setPredicate(e -> true);
+            return;
+        }
+
+        String termoLower = termo.toLowerCase();
+
+        equipamentosFiltrados.setPredicate(eq -> {
+            if (filtro == null) {
+                return true;
+            }
+            return switch (filtro) {
+                case "GLPI" -> eq.getGLPI() != null && eq.getGLPI().toLowerCase().contains(termoLower);
+                case "Patrimônio" -> eq.getPatrimonio() != null && eq.getPatrimonio().toLowerCase().contains(termoLower);
+                case "Nº de Série" -> eq.getNumeroSerie() != null && eq.getNumeroSerie().toLowerCase().contains(termoLower);
+                case "Cod. Chamado Empresa" -> eq.getChamadoEmpresa() != null && eq.getChamadoEmpresa().toLowerCase().contains(termoLower);
+                default -> true;
+            };
+        });
+    }
+
     
     private void criarPastaPadraoSeNecessario() {
         Path arquivo = CAMINHO_XLSX_PADRAO;
@@ -164,7 +202,7 @@ public class MainController {
     					+ "Contato suporte: cmtec-smh@bm.rs.gov.br\n"
     					+ "Autor: Christian Heil Salsa\n"
     					+ "© 2025 Seção Manutenção de Hardware da Brigada Militar\n"
-    					+ "Versão 1.2.0\n"
+    					+ "Versão 1.3.0\n"
     					+ "Sistema de uso interno. Proibida a distribuição sem autorização.";
     	javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
     	alerta.setTitle("Sobre");

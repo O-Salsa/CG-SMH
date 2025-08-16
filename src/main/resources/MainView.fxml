@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -34,7 +35,9 @@
             </MenuBar>
             <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10;">
                 <Label text="Buscar:" />
+                <ComboBox fx:id="comboFiltro" prefWidth="150.0" />
                 <TextField id="campoBusca" fx:id="campoBusca" />
+                <Button text="Buscar" onAction="#onBuscar" />
             </HBox>
         </VBox>
     </top>
