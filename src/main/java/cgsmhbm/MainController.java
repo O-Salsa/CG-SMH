@@ -18,6 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -67,7 +68,60 @@ public class MainController {
     private ObservableList<Equipment> equipamentos = FXCollections.observableArrayList();
     private FilteredList<Equipment> equipamentosFiltrados;
 
-    
+    @FXML
+    private static int compareAlphaNumeric(String a, String b) {
+    	   if (a == null && b == null) return 0;
+    	    if (a == null) return -1;
+    	    if (b == null) return 1;
+
+    	    String sa = a.trim(), sb = b.trim();
+    	    int ia = 0, ib = 0, na = sa.length(), nb = sb.length();
+
+    	    while (ia < na && ib < nb) {
+    	        char ca = sa.charAt(ia), cb = sb.charAt(ib);
+
+    	        boolean da = Character.isDigit(ca);
+    	        boolean db = Character.isDigit(cb);
+
+    	        if (da && db) {
+    	            // lê blocos numéricos completos
+    	            int za = ia; while (za < na && sa.charAt(za) == '0') za++;
+    	            int zb = ib; while (zb < nb && sb.charAt(zb) == '0') zb++;
+
+    	            int ea = za; while (ea < na && Character.isDigit(sa.charAt(ea))) ea++;
+    	            int eb = zb; while (eb < nb && Character.isDigit(sb.charAt(eb))) eb++;
+
+    	            int lenA = ea - za;
+    	            int lenB = eb - zb;
+
+    	            // compara pelo comprimento (evita BigInteger)
+    	            if (lenA != lenB) return Integer.compare(lenA, lenB);
+
+    	            // mesmo comprimento: compara lexicograficamente a parte sem zeros
+    	            int cmp = sa.regionMatches(za, sb, zb, lenA) ? 0
+    	                      : sa.substring(za, ea).compareTo(sb.substring(zb, eb));
+    	            if (cmp != 0) return cmp;
+
+    	            // números iguais: desempata por número de zeros à esquerda (menos zeros < mais zeros)
+    	            int zerosA = za - ia, zerosB = zb - ib;
+    	            if (zerosA != zerosB) return Integer.compare(zerosA, zerosB);
+
+    	            ia = ea; ib = eb; // avança após o bloco numérico
+    	            continue;
+    	        }
+
+    	        // se um é dígito e o outro não, decide ordem (aqui: não-dígito < dígito)
+    	        if (da != db) return da ? 1 : -1;
+
+    	        // ambos não-numéricos: compara case-insensitive
+    	        int cmp = Character.compare(Character.toLowerCase(ca), Character.toLowerCase(cb));
+    	        if (cmp != 0) return cmp;
+
+    	        ia++; ib++;
+    	    }
+    	    // prefixo comum: menor comprimento vem primeiro
+    	    return Integer.compare(na - ia, nb - ib);
+    	}
 
     @FXML 
     public void initialize() {
@@ -80,8 +134,18 @@ public class MainController {
         colBatalhao.setCellValueFactory(new PropertyValueFactory<>("batalhao"));
         colChamadoEmpresa.setCellValueFactory(new PropertyValueFactory<>("chamadoEmpresa"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colGLPI.setComparator(MainController::compareAlphaNumeric);
+        colPatrimonio.setComparator(MainController::compareAlphaNumeric);
+        colNumeroSerie.setComparator(MainController::compareAlphaNumeric);
+        colDescricaoMarcaModelo.setComparator(MainController::compareAlphaNumeric);
+        colDefeito.setComparator(MainController::compareAlphaNumeric);
+        colBatalhao.setComparator(MainController::compareAlphaNumeric);
+        colChamadoEmpresa.setComparator(MainController::compareAlphaNumeric);
+
         equipamentosFiltrados = new FilteredList<>(equipamentos, e -> true);
-        tabelaEquipamentos.setItems(equipamentosFiltrados);
+        SortedList<Equipment> equipamentosOrdenados = new SortedList<>(equipamentosFiltrados);
+        equipamentosOrdenados.comparatorProperty().bind(tabelaEquipamentos.comparatorProperty());
+        tabelaEquipamentos.setItems(equipamentosOrdenados);
 
         comboFiltro.setItems(FXCollections.observableArrayList(
                 "GLPI",
@@ -202,7 +266,7 @@ public class MainController {
     					+ "Contato suporte: cmtec-smh@bm.rs.gov.br\n"
     					+ "Autor: Christian Heil Salsa\n"
     					+ "© 2025 Seção Manutenção de Hardware da Brigada Militar\n"
-    					+ "Versão 1.3.0\n"
+    					+ "Versão 1.3.1\n"
     					+ "Sistema de uso interno. Proibida a distribuição sem autorização.";
     	javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
     	alerta.setTitle("Sobre");
@@ -245,8 +309,9 @@ public class MainController {
     	
     	java.util.Optional<javafx.scene.control.ButtonType> resposta = confirmacao.showAndWait();
     	if (resposta.isPresent() && resposta.get() == javafx.scene.control.ButtonType.OK) {
-    		tabelaEquipamentos.getItems().remove(selecionado);
+    		equipamentos.remove(selecionado);
             salvarEquipamentosEmExcel(obterCaminhoUltimoArquivo());
+
 
     	}
     	
