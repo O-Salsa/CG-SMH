@@ -266,7 +266,7 @@ public class MainController {
     					+ "Contato suporte: cmtec-smh@bm.rs.gov.br\n"
     					+ "Autor: Christian Heil Salsa\n"
     					+ "© 2025 Seção Manutenção de Hardware da Brigada Militar\n"
-    					+ "Versão 1.3.1\n"
+    					+ "Versão 1.3.2\n"
     					+ "Sistema de uso interno. Proibida a distribuição sem autorização.";
     	javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
     	alerta.setTitle("Sobre");

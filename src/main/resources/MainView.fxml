@@ -38,13 +38,13 @@
                 <ComboBox fx:id="comboFiltro" prefWidth="150.0" />
                 <TextField id="campoBusca" fx:id="campoBusca" />
                 <Button text="Buscar" onAction="#onBuscar" />
+            <Label fx:id="labelInfo" text="Detalhes do Equipamento: -" style="-fx-padding: 5;" />
             </HBox>
         </VBox>
     </top>
     
     <!-- Tabela central -->
     <center>
-        <VBox>
             <TableView id="tabelaEquipamentos" fx:id="tabelaEquipamentos" prefHeight="400.0" prefWidth="1220.0">
                 <columns>
                     <TableColumn fx:id="colGLPI" prefWidth="76.0" text="GLPI" />
@@ -57,8 +57,6 @@
                     <TableColumn fx:id="colStatus" prefWidth="245.0" text="Status" />
                 </columns>
             </TableView>
-            <Label fx:id="labelInfo" text="Criado em: - | Última modificação: -" style="-fx-padding: 5;" />
-        </VBox>
     </center>
     
     <!-- Botões de ação embaixo -->
