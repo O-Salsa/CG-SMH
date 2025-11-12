@@ -301,7 +301,7 @@ public class MainController {
 		String conteudo = "CGSMH — Controle de Garantias da Seção de Manutenção de Hardware\n"
 				+ "Sistema para controle e gestão de garantias de equipamentos de informática da Seção Manutenção de Hardware da Brigada Militar.\n\n"
 				+ "Contato suporte: cmtec-smh@bm.rs.gov.br\n" + "Autor: Christian Heil Salsa\n"
-				+ "© 2025 Seção Manutenção de Hardware da Brigada Militar\n" + "Versão 1.3.2\n"
+				+ "© 2025 Seção Manutenção de Hardware da Brigada Militar\n" + "Versão 1.5.0\n"
 				+ "Sistema de uso interno. Proibida a distribuição sem autorização.";
 		javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(
 				javafx.scene.control.Alert.AlertType.INFORMATION);
